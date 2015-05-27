@@ -4,10 +4,7 @@ module.exports = function (app) {
     app.use(require('./json'));
 
     //DATABASE
-    if (app.db_inited) {
-        app.db_inited = true;
-        app.use(require('./database'));
-    }
+    app.use(require('./database')(app));
 
     //ROUTERS
     app.use('/api', require('../app/controllers/api'));

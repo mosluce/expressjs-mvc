@@ -7,42 +7,50 @@ var fs = require('fs');
 var path = require('path');
 var _ = require('underscore');
 
-var config = {
-    adapters: {
-        mongo: mongoAdapter
-    },
-    connections: {
-        mongodb: {
-            adapter: 'mongo',
-            host: 'localhost',
-            database: 'klcc-cloud-apps-db'
+module.exports = function (app) {
+    return function (req, res, next) {
+        if (app.models) {
+            req.models = app.models;
+            next();
+            return;
         }
-    },
-    defaults: {}
-};
 
-module.exports = function (req, res, next) {
-    var orm = new Waterline();
+        var config = {
+            adapters: {
+                mongo: mongoAdapter
+            },
+            connections: {
+                mongodb: {
+                    adapter: 'mongo',
+                    host: 'localhost',
+                    database: 'klcc-cloud-apps-db'
+                }
+            },
+            defaults: {}
+        };
 
-    var modelDir = path.join(__dirname, '..', '..', 'app', 'models');
+        var orm = new Waterline();
 
-    var files = fs.readdirSync(modelDir);
+        var modelDir = path.join(__dirname, '..', '..', 'app', 'models');
 
-    for (var i in files) {
-        var modelName = files[i].replace(/\.js$/, '');
-        var modelAttr = require(path.join(modelDir, modelName));
-        var model = Waterline.Collection.extend(_.extend({
-            identity: modelName,
-            connection: 'mongodb'
-        }, modelAttr));
-        orm.loadCollection(model);
-    }
+        var files = fs.readdirSync(modelDir);
 
-    orm.initialize(config, function (err, models) {
-        if (err) return res.e(err);
+        for (var i in files) {
+            var modelName = files[i].replace(/\.js$/, '');
+            var modelAttr = require(path.join(modelDir, modelName));
+            var model = Waterline.Collection.extend(_.extend({
+                identity: modelName,
+                connection: 'mongodb'
+            }, modelAttr));
+            orm.loadCollection(model);
+        }
 
-        req.models = models.collections;
+        orm.initialize(config, function (err, models) {
+            if (err) return res.e(err);
 
-        next();
-    });
+            req.models = app.models = models.collections;
+
+            next();
+        });
+    };
 };
