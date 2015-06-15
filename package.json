@@ -1,6 +1,6 @@
 {
-  "name": "hello",
-  "version": "0.0.0",
+  "name": "express-mvc",
+  "version": "0.0.2",
   "private": true,
   "scripts": {
     "start": "node ./bin/www"
@@ -14,11 +14,11 @@
     "express": "~4.12.2",
     "express-ejs-layouts": "^1.1.0",
     "less-middleware": "1.0.x",
+    "mongoose": "^4.0.5",
+    "mongoose-timestamp": "^0.4.0",
     "morgan": "~1.5.1",
-    "sails-mongo": "^0.11.2",
     "serve-favicon": "~2.2.0",
     "underscore": "^1.8.3",
-    "uuid": "^2.0.1",
-    "waterline": "^0.10.22"
+    "uuid": "^2.0.1"
   }
 }
