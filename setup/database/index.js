@@ -10,6 +10,7 @@ var _ = require('underscore');
 
 var mongoose = require('mongoose');
 var timestamps = require('mongoose-timestamp');
+var autopopulate = require('mongoose-autopopulate');
 var Schema = mongoose.Schema;
 
 var env = process.env['NODE_ENV'] || 'development';
@@ -29,15 +30,32 @@ module.exports = function (req, res, next) {
         for (var i in modelFiles) {
             var modelFile = modelFiles[i];
 
-            if(!/.*\.js/.test(modelFile)) continue;
+            if (/^\..*/.test(modelFile)) continue;
 
             var modelName = modelFiles[i].replace(/\.js$/, '');
-            var schema = require(path.join(modelDir, modelName))(Schema);
+            var schemaObj = require(path.join(modelDir, modelName))(Schema);
 
-            schema.plugin(timestamps);
+            if (schemaObj instanceof Array) {
+                for (var i in schemaObj) {
+                    var schema = schemaObj[i].schema;
+                    var name = schemaObj[i].name;
 
-            conn.model(modelName, schema);
+                    schema.plugin(timestamps, {
+                        updatedAt: 'updated',
+                        createdAt: 'created'
+                    });
+                    schema.plugin(autopopulate);
+                    conn.model(name, schema);
+                }
+            } else {
+                schemaObj.plugin(timestamps);
+                schemaObj.plugin(autopopulate);
+                conn.model(modelName, schemaObj);
+            }
         }
+
+        req.models = conn.models;
+        req.database = conn;
 
         next();
     });
